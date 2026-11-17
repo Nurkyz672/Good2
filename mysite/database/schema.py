@@ -1,11 +1,26 @@
 from pydantic import BaseModel, Field
 from typing import Optional
+from enum import Enum as PyEnum
 from datetime import datetime
 from mysite.database.models import (
     WarehouseStatus, ReservationStatus, TransportType, CourierStatus,
-    DeliveryStatus, RouteStatus, StopType, StopStatus
-)
+    DeliveryStatus, RouteStatus, StopType, StopStatus)
 
+
+
+
+
+class TransportTypeChoice(str, PyEnum):
+    walking = "walking"
+    bicycle = "bicycle"
+    scooter = "scooter"
+    car = "car"
+
+
+class CourierStatusChoice(str, PyEnum):
+    offline = "offline"
+    online = "online"
+    busy = "busy"
 
 class WarehouseInputSchema(BaseModel):
     city_id: int
@@ -63,16 +78,15 @@ class InventoryReservationOutSchema(BaseModel):
     created_at: datetime
 
 
-class CourierInputSchema(BaseModel):
-    user_id: int
-    warehouse_id: int
-    transport_type: TransportType = TransportType.walking
+class CourierCreateSchema(BaseModel):
+    warehouse_id: int = Field(gt=0)
+    transport_type: TransportTypeChoice = TransportTypeChoice.walking
+    status: CourierStatusChoice = CourierStatusChoice.offline
     max_active_orders: int = Field(default=3, ge=1)
 
 
+
 class CourierOutSchema(BaseModel):
-    id: int
-    user_id: int
     warehouse_id: int
     transport_type: TransportType
     status: CourierStatus
@@ -81,14 +95,11 @@ class CourierOutSchema(BaseModel):
 
 
 class CourierLocationInputSchema(BaseModel):
-    courier_id: int
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
 
 
 class CourierLocationOutSchema(BaseModel):
-    id: int
-    courier_id: int
     latitude: float
     longitude: float
     recorded_at: datetime
